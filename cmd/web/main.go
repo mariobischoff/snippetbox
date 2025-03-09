@@ -5,11 +5,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"snippetbox.mariotech.com.br/internal/database"
+	"snippetbox.mariotech.com.br/internal/models"
 )
 
 type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -19,9 +23,16 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	db, dberr := database.InitDB()
+	if dberr != nil {
+		errorLog.Fatal(dberr)
+	}
+	defer db.Close()
+
 	app := &application{
 		infoLog:  infoLog,
 		errorLog: errorLog,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	srv := &http.Server{
